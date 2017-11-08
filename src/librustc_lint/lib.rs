@@ -247,6 +247,10 @@ pub fn register_builtins(store: &mut lint::LintStore, sess: Option<&Session>) {
             id: LintId::of(LATE_BOUND_LIFETIME_ARGUMENTS),
             reference: "issue #42868 <https://github.com/rust-lang/rust/issues/42868>",
         },
+        FutureIncompatibleInfo {
+            id: LintId::of(COERCE_NEVER),
+            reference: "issue #42869 <https://github.com/rust-lang/rust/issues/42869>",
+        },
         ]);
 
     // Register renamed and removed lints
