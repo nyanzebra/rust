@@ -1023,6 +1023,8 @@ pub enum ExprKind {
 
     /// `expr?`
     Try(P<Expr>),
+    /// `expr? if_true:if_false`
+    Ternary(P<Expr>, P<Expr>, P<Expr>),
 
     /// A `yield`, with an optional value to be yielded
     Yield(Option<P<Expr>>),

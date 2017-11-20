@@ -2741,7 +2741,15 @@ impl<'a> LoweringContext<'a> {
                                hir_vec![err_arm, ok_arm],
                                hir::MatchSource::TryDesugar)
             }
+            // Desugar ExprKind::Ternary
+            // From: `<expr>?`
+            ExprKind::Ternary(ref cond, ref expr, ref else_expr) => {
+                let else_expr = P(self.lower_expr(else_expr));
 
+                let then_expr = P(self.lower_expr(expr));
+
+                hir::ExprIf(P(self.lower_expr(cond)), then_expr, Some(else_expr))
+            }
             ExprKind::Mac(_) => panic!("Shouldn't exist here"),
         };
 

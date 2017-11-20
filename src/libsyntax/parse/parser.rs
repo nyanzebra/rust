@@ -2484,8 +2484,11 @@ impl<'a> Parser<'a> {
         loop {
             // expr?
             while self.eat(&token::Question) {
-                let hi = self.prev_span;
-                e = self.mk_expr(lo.to(hi), ExprKind::Try(e), ThinVec::new());
+                hi = self.prev_span;
+                e = match self.parse_ternary(ThinVec::new()) {
+                    Ok(res) => res,
+                    _ => self.mk_expr(lo.to(hi), ExprKind::Try(e), ThinVec::new())
+                }
             }
 
             // expr.f
@@ -2832,6 +2835,11 @@ impl<'a> Parser<'a> {
                 let r = try!(self.mk_range(Some(lhs), rhs, limits));
                 lhs = self.mk_expr(lhs_span.to(rhs_span), r, ThinVec::new());
                 break
+            } else if op == AssocOp::Question {
+                lhs = match self.parse_ternary(ThinVec::new()) {
+                    Ok(res) => res,
+                    _ => lhs
+                };
             }
 
             let rhs = match op.fixity() {
@@ -2888,7 +2896,7 @@ impl<'a> Parser<'a> {
                     let aopexpr = self.mk_assign_op(codemap::respan(cur_op_span, aop), lhs, rhs);
                     self.mk_expr(span, aopexpr, ThinVec::new())
                 }
-                AssocOp::As | AssocOp::Colon | AssocOp::DotDot | AssocOp::DotDotEq => {
+                AssocOp::As | AssocOp::Colon | AssocOp::DotDot | AssocOp::DotDotEq | AssocOp::Question => {
                     self.bug("AssocOp should have been handled by special case")
                 }
             };
@@ -3295,7 +3303,6 @@ impl<'a> Parser<'a> {
         let r = f(self);
         self.restrictions = old;
         return r;
-
     }
 
     /// Parse an expression, subject to the given restrictions
@@ -3315,6 +3322,21 @@ impl<'a> Parser<'a> {
         } else {
             Ok(None)
         }
+    }
+
+    pub fn parse_ternary(&mut self, attrs: ThinVec<Attribute>) -> PResult<'a, P<Expr>> {
+        let lo = self.prev_span;
+        let cond = self.parse_expr_res(Restrictions::NO_STRUCT_LITERAL, None)?;
+
+        if self.eat(&token::Question) {
+            let thn = self.parse_expr()?;
+            if self.eat(&token::Colon) {
+                let elexpr = self.parse_expr()?;
+                let hi = elexpr.span;
+                return Ok(self.mk_expr(lo.to(hi), ExprKind::Ternary(cond, thn, elexpr), attrs))
+            }
+        }
+        return Ok(cond);
     }
 
     /// Parse patterns, separated by '|' s

@@ -66,6 +66,8 @@ pub enum AssocOp {
     DotDotEq,
     /// `:`
     Colon,
+    /// `?`
+    Question
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -109,6 +111,7 @@ impl AssocOp {
             // DotDotDot is no longer supported, but we need some way to display the error
             Token::DotDotDot => Some(DotDotEq),
             Token::Colon => Some(Colon),
+            Token::Question => Some(Question),
             _ if t.is_keyword(keywords::As) => Some(As),
             _ => None
         }
@@ -156,6 +159,7 @@ impl AssocOp {
             DotDot | DotDotEq => 4,
             Inplace => 3,
             Assign | AssignOp(_) => 2,
+            Question => 0,
         }
     }
 
@@ -167,7 +171,7 @@ impl AssocOp {
             Inplace | Assign | AssignOp(_) => Fixity::Right,
             As | Multiply | Divide | Modulus | Add | Subtract | ShiftLeft | ShiftRight | BitAnd |
             BitXor | BitOr | Less | Greater | LessEqual | GreaterEqual | Equal | NotEqual |
-            LAnd | LOr | Colon => Fixity::Left,
+            LAnd | LOr | Colon | Question => Fixity::Left,
             DotDot | DotDotEq => Fixity::None
         }
     }
@@ -178,7 +182,7 @@ impl AssocOp {
             Less | Greater | LessEqual | GreaterEqual | Equal | NotEqual => true,
             Inplace | Assign | AssignOp(_) | As | Multiply | Divide | Modulus | Add | Subtract |
             ShiftLeft | ShiftRight | BitAnd | BitXor | BitOr | LAnd | LOr |
-            DotDot | DotDotEq | Colon => false
+            DotDot | DotDotEq | Colon | Question => false
         }
     }
 
@@ -188,7 +192,7 @@ impl AssocOp {
             Assign | AssignOp(_) | Inplace => true,
             Less | Greater | LessEqual | GreaterEqual | Equal | NotEqual | As | Multiply | Divide |
             Modulus | Add | Subtract | ShiftLeft | ShiftRight | BitAnd | BitXor | BitOr | LAnd |
-            LOr | DotDot | DotDotEq | Colon => false
+            LOr | DotDot | DotDotEq | Colon | Question => false
         }
     }
 
@@ -213,7 +217,7 @@ impl AssocOp {
             BitOr => Some(BinOpKind::BitOr),
             LAnd => Some(BinOpKind::And),
             LOr => Some(BinOpKind::Or),
-            Inplace | Assign | AssignOp(_) | As | DotDot | DotDotEq | Colon => None
+            Inplace | Assign | AssignOp(_) | As | DotDot | DotDotEq | Colon | Question => None
         }
     }
 }
@@ -265,6 +269,7 @@ pub fn expr_precedence(expr: &ast::Expr) -> i8 {
         ExprKind::TupField(..) |
         ExprKind::Index(..) |
         ExprKind::Try(..) |
+        ExprKind::Ternary(..) |
         ExprKind::InlineAsm(..) |
         ExprKind::Mac(..) => PREC_POSTFIX,
 

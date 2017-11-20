@@ -1785,6 +1785,19 @@ impl<'a> State<'a> {
         self.print_else(elseopt)
     }
 
+    pub fn print_ternary(&mut self, test: &ast::Expr, ifexpr: &ast::Expr,
+                        elseexpr: &ast::Expr) -> io::Result<()> {
+        self.print_expr_as_cond(test)?;
+        self.s.space()?;
+        self.s.word("?")?;
+        self.s.space()?;
+        self.print_expr(ifexpr)?;
+        self.s.space()?;
+        self.s.word(":")?;
+        self.s.space()?;
+        self.print_expr(elseexpr)
+    }
+
     pub fn print_if_let(&mut self, pat: &ast::Pat, expr: &ast::Expr, blk: &ast::Block,
                         elseopt: Option<&ast::Expr>) -> io::Result<()> {
         self.head("if let")?;
@@ -2340,6 +2353,9 @@ impl<'a> State<'a> {
                 self.head("do catch")?;
                 self.s.space()?;
                 self.print_block_with_attrs(blk, attrs)?
+            }
+            ast::ExprKind::Ternary(ref test, ref blk, ref elseexpr) => {
+                self.print_ternary(test, blk, elseexpr)?;
             }
         }
         self.ann.post(self, NodeExpr(expr))?;

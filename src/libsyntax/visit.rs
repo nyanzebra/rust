@@ -803,6 +803,11 @@ pub fn walk_expr<'a, V: Visitor<'a>>(visitor: &mut V, expression: &'a Expr) {
         ExprKind::Try(ref subexpression) => {
             visitor.visit_expr(subexpression)
         }
+        ExprKind::Ternary(ref head_expression, ref if_expr, ref else_expr) => {
+            visitor.visit_expr(head_expression);
+            visitor.visit_expr(if_expr);
+            visitor.visit_expr(else_expr);
+        }
         ExprKind::Catch(ref body) => {
             visitor.visit_block(body)
         }
